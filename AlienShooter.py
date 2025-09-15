@@ -95,6 +95,7 @@ player = Player(WIDTH // 2, HEIGHT - 100)
 bullets = []
 aliens = []
 
+score = 0
 can_shoot = True
 shoot_cooldown = 300  # milliseconds
 last_shot_time = 0
@@ -145,6 +146,15 @@ while running:
         if alien.is_off_screen():
             aliens.remove(alien)
 
+    # Bullet hits alien
+    for bullet in bullets[:]:
+        for alien in aliens[:]:
+            if bullet.rect.colliderect(alien.rect):
+                bullets.remove(bullet)
+                aliens.remove(alien)
+                score += 1
+                break  # Stop checking this bullet once it hits
+
     # ----- Drawing -----
     screen.fill(BLACK)
 
@@ -155,6 +165,10 @@ while running:
 
     for alien in aliens:
         alien.draw(screen)
+
+    # HUD: Show score
+    score_text = font.render(f"Score: {score}", True, WHITE)
+    screen.blit(score_text, (WIDTH - 150, 10))
 
     pygame.display.flip()
 
