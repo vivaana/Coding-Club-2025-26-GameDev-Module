@@ -100,9 +100,9 @@ can_shoot = True
 shoot_cooldown = 300  # milliseconds
 last_shot_time = 0
 
-# Set a timer to spawn aliens every 1000 ms
 pygame.time.set_timer(pygame.USEREVENT, 1000)
 
+game_over = False
 running = True
 
 # ----- Main Game Loop -----
@@ -116,44 +116,54 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-        if event.type == pygame.KEYDOWN:
-            player.handle_keydown(event.key)
+        if not game_over:
+            if event.type == pygame.KEYDOWN:
+                player.handle_keydown(event.key)
 
-            if event.key == pygame.K_SPACE and can_shoot:
-                bullets.append(Bullet(player.rect.centerx - 5, player.rect.top))
-                can_shoot = False
-                last_shot_time = current_time
+                if event.key == pygame.K_SPACE and can_shoot:
+                    bullets.append(Bullet(player.rect.centerx - 5, player.rect.top))
+                    can_shoot = False
+                    last_shot_time = current_time
 
-        if event.type == pygame.KEYUP:
-            player.handle_keyup(event.key)
+            if event.type == pygame.KEYUP:
+                player.handle_keyup(event.key)
 
-        if event.type == pygame.USEREVENT:
-            aliens.append(Alien())
+            if event.type == pygame.USEREVENT:
+                aliens.append(Alien())
 
     # ----- Game Updates -----
-    player.move()
+    if not game_over:
+        player.move()
 
-    if not can_shoot and current_time - last_shot_time > shoot_cooldown:
-        can_shoot = True
+        if not can_shoot and current_time - last_shot_time > shoot_cooldown:
+            can_shoot = True
 
-    for bullet in bullets[:]:
-        bullet.update()
-        if bullet.is_off_screen():
-            bullets.remove(bullet)
-
-    for alien in aliens[:]:
-        alien.update()
-        if alien.is_off_screen():
-            aliens.remove(alien)
-
-    # Bullet hits alien
-    for bullet in bullets[:]:
-        for alien in aliens[:]:
-            if bullet.rect.colliderect(alien.rect):
+        for bullet in bullets[:]:
+            bullet.update()
+            if bullet.is_off_screen():
                 bullets.remove(bullet)
+
+        for alien in aliens[:]:
+            alien.update()
+            if alien.is_off_screen():
                 aliens.remove(alien)
-                score += 1
-                break  # Stop checking this bullet once it hits
+
+        # Bullet hits alien
+        for bullet in bullets[:]:
+            for alien in aliens[:]:
+                if bullet.rect.colliderect(alien.rect):
+                    bullets.remove(bullet)
+                    aliens.remove(alien)
+                    score += 1
+                    break
+
+        # Alien hits player
+        for alien in aliens[:]:
+            if alien.rect.colliderect(player.rect):
+                aliens.remove(alien)
+                player.lives -= 1
+                if player.lives <= 0:
+                    game_over = True
 
     # ----- Drawing -----
     screen.fill(BLACK)
@@ -166,8 +176,10 @@ while running:
     for alien in aliens:
         alien.draw(screen)
 
-    # HUD: Show score
+    # HUD
+    lives_text = font.render(f"Lives: {player.lives}", True, WHITE)
     score_text = font.render(f"Score: {score}", True, WHITE)
+    screen.blit(lives_text, (10, 10))
     screen.blit(score_text, (WIDTH - 150, 10))
 
     pygame.display.flip()
