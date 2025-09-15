@@ -35,6 +35,20 @@ class Player:
 
 player = Player(WIDTH // 2, HEIGHT - 100)
 
+class Bullet:
+    def __init__(self, x, y):
+        self.rect = pygame.Rect(x, y, 10, 20)
+
+    def update(self):
+        self.rect.y -= 8
+
+    def draw(self, surface):
+        pygame.draw.rect(surface, (255, 255, 0), self.rect)
+
+    def is_off_screen(self):
+        return self.rect.y < 0
+
+
 running = True
 while running:
     clock.tick(FPS)
