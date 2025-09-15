@@ -23,6 +23,7 @@ class Player:
         self.image = player_img
         self.rect = self.image.get_rect(topleft=(x, y))
         self.speed = 7
+        self.lives = 3
 
     def move(self, keys):
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
@@ -78,6 +79,8 @@ last_shot_time = 0
 aliens = []
 pygame.time.set_timer(pygame.USEREVENT, 1000)  # spawn alien every 1000ms (1 second)
 
+font = pygame.font.SysFont(None, 36)
+
 running = True
 while running:
     clock.tick(FPS)
@@ -114,6 +117,23 @@ while running:
         if alien.is_off_screen():
             aliens.remove(alien)
 
+    # COLLISION: Bullet hits Alien
+    for bullet in bullets[:]:
+        for alien in aliens[:]:
+            if bullet.rect.colliderect(alien.rect):
+                bullets.remove(bullet)
+                aliens.remove(alien)
+                break  # bullet can only hit one alien
+
+    # COLLISION: Alien hits Player
+    for alien in aliens[:]:
+        if alien.rect.colliderect(player.rect):
+            aliens.remove(alien)
+            player.lives -= 1
+            if player.lives <= 0:
+                print("Game Over!")
+                running = False
+
     # DRAWING
     screen.fill(BLACK)
     player.draw(screen)
@@ -123,6 +143,10 @@ while running:
 
     for alien in aliens:
         alien.draw(screen)
+
+    # Draw lives
+    lives_text = font.render(f"Lives: {player.lives}", True, WHITE)
+    screen.blit(lives_text, (10, 10))
 
     pygame.display.flip()
 
