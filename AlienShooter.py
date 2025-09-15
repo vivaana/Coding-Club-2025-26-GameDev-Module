@@ -14,13 +14,9 @@ FPS = 60
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
-# Load player image and scale it
 player_img = pygame.image.load("assets/player.png")
 player_img = pygame.transform.scale(player_img, (70, 70))
 
-# Optional: Load sounds (replace paths with your actual sound files)
-# shoot_sound = pygame.mixer.Sound("assets/shoot.wav")
-# alien_hit_sound = pygame.mixer.Sound("assets/explosion.wav")
 
 class Player:
     def __init__(self, x, y):
@@ -39,6 +35,7 @@ class Player:
     def draw(self, surface):
         surface.blit(self.image, self.rect)
 
+
 class Bullet:
     def __init__(self, x, y):
         self.rect = pygame.Rect(x, y, 10, 20)
@@ -51,6 +48,7 @@ class Bullet:
 
     def is_off_screen(self):
         return self.rect.y < 0
+
 
 class Alien:
     def __init__(self):
@@ -69,11 +67,22 @@ class Alien:
     def is_off_screen(self):
         return self.rect.y > HEIGHT
 
+
+class Star:
+    def __init__(self):
+        self.x = random.randint(0, WIDTH)
+        self.y = random.randint(0, HEIGHT)
+        self.size = random.randint(1, 3)
+
+    def draw(self, surface):
+        pygame.draw.circle(surface, WHITE, (self.x, self.y), self.size)
+
+
 player = Player(WIDTH // 2, HEIGHT - 100)
 bullets = []
 
 can_shoot = True
-shoot_cooldown = 300  # milliseconds
+shoot_cooldown = 300
 last_shot_time = 0
 
 aliens = []
@@ -82,6 +91,9 @@ pygame.time.set_timer(pygame.USEREVENT, 1000)
 font = pygame.font.SysFont(None, 36)
 
 score = 0
+
+# Create stars
+stars = [Star() for _ in range(100)]
 
 running = True
 while running:
@@ -102,7 +114,6 @@ while running:
         bullets.append(bullet)
         can_shoot = False
         last_shot_time = current_time
-        # shoot_sound.play()  # Uncomment if you have sound file
 
     if not can_shoot and current_time - last_shot_time > shoot_cooldown:
         can_shoot = True
@@ -117,17 +128,14 @@ while running:
         if alien.is_off_screen():
             aliens.remove(alien)
 
-    # Collision bullet-alien
     for bullet in bullets[:]:
         for alien in aliens[:]:
             if bullet.rect.colliderect(alien.rect):
                 bullets.remove(bullet)
                 aliens.remove(alien)
                 score += 1
-                # alien_hit_sound.play()  # Uncomment if you have sound file
                 break
 
-    # Collision alien-player
     for alien in aliens[:]:
         if alien.rect.colliderect(player.rect):
             aliens.remove(alien)
@@ -136,17 +144,17 @@ while running:
                 print("Game Over!")
                 running = False
 
-    # Drawing
+    # Draw background and stars
     screen.fill(BLACK)
-    player.draw(screen)
+    for star in stars:
+        star.draw(screen)
 
+    player.draw(screen)
     for bullet in bullets:
         bullet.draw(screen)
-
     for alien in aliens:
         alien.draw(screen)
 
-    # Draw lives and score
     lives_text = font.render(f"Lives: {player.lives}", True, WHITE)
     score_text = font.render(f"Score: {score}", True, WHITE)
     screen.blit(lives_text, (10, 10))
