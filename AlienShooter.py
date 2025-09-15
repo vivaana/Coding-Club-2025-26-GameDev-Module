@@ -74,8 +74,9 @@ can_shoot = True
 shoot_cooldown = 300  # milliseconds
 last_shot_time = 0
 
-# Aliens list (empty for now)
+# Aliens list and spawn timer
 aliens = []
+pygame.time.set_timer(pygame.USEREVENT, 1000)  # spawn alien every 1000ms (1 second)
 
 running = True
 while running:
@@ -85,6 +86,8 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        if event.type == pygame.USEREVENT:
+            aliens.append(Alien())
 
     keys = pygame.key.get_pressed()
     player.move(keys)
@@ -105,6 +108,12 @@ while running:
         if bullet.is_off_screen():
             bullets.remove(bullet)
 
+    # Update aliens and remove if off screen
+    for alien in aliens[:]:
+        alien.update()
+        if alien.is_off_screen():
+            aliens.remove(alien)
+
     # DRAWING
     screen.fill(BLACK)
     player.draw(screen)
@@ -112,7 +121,8 @@ while running:
     for bullet in bullets:
         bullet.draw(screen)
 
-    # NOTE: aliens are not yet spawned or drawn in this step
+    for alien in aliens:
+        alien.draw(screen)
 
     pygame.display.flip()
 
