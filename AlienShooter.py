@@ -32,3 +32,24 @@ class Player:
 
     def draw(self, surface):
         surface.blit(self.image, self.rect)
+
+player = Player(WIDTH // 2, HEIGHT - 100)
+
+running = True
+while running:
+    clock.tick(FPS)
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    keys = pygame.key.get_pressed()
+    player.move(keys)
+
+    screen.fill(BLACK)
+    player.draw(screen)
+
+    pygame.display.flip()
+
+pygame.quit()
+sys.exit()
