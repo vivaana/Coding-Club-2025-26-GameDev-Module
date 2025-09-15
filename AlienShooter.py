@@ -13,6 +13,7 @@ FPS = 60
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
+# Load player image and scale it
 player_img = pygame.image.load("assets/player.png")
 player_img = pygame.transform.scale(player_img, (70, 70))
 
@@ -33,8 +34,6 @@ class Player:
     def draw(self, surface):
         surface.blit(self.image, self.rect)
 
-player = Player(WIDTH // 2, HEIGHT - 100)
-
 class Bullet:
     def __init__(self, x, y):
         self.rect = pygame.Rect(x, y, 10, 20)
@@ -48,10 +47,19 @@ class Bullet:
     def is_off_screen(self):
         return self.rect.y < 0
 
+# Initialize player and bullets list
+player = Player(WIDTH // 2, HEIGHT - 100)
+bullets = []
+
+# Shooting cooldown variables
+can_shoot = True
+shoot_cooldown = 300  # milliseconds
+last_shot_time = 0
 
 running = True
 while running:
     clock.tick(FPS)
+    current_time = pygame.time.get_ticks()
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -60,8 +68,27 @@ while running:
     keys = pygame.key.get_pressed()
     player.move(keys)
 
+    # Shoot bullets with cooldown
+    if keys[pygame.K_SPACE] and can_shoot:
+        bullet = Bullet(player.rect.centerx - 5, player.rect.top)
+        bullets.append(bullet)
+        can_shoot = False
+        last_shot_time = current_time
+
+    if not can_shoot and current_time - last_shot_time > shoot_cooldown:
+        can_shoot = True
+
+    # Update bullets and remove if off screen
+    for bullet in bullets[:]:
+        bullet.update()
+        if bullet.is_off_screen():
+            bullets.remove(bullet)
+
+    # Draw everything
     screen.fill(BLACK)
     player.draw(screen)
+    for bullet in bullets:
+        bullet.draw(screen)
 
     pygame.display.flip()
 
