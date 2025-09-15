@@ -29,6 +29,22 @@ large_font = pygame.font.SysFont(None, 64)
 
 # ----- Classes -----
 
+class Star:
+    def __init__(self):
+        self.x = random.randint(0, WIDTH)
+        self.y = random.randint(0, HEIGHT)
+        self.size = random.randint(1, 3)
+        self.speed = random.uniform(0.5, 1.5)
+
+    def update(self):
+        self.y += self.speed
+        if self.y > HEIGHT:
+            self.y = 0
+            self.x = random.randint(0, WIDTH)
+
+    def draw(self, surface):
+        pygame.draw.circle(surface, WHITE, (int(self.x), int(self.y)), self.size)
+
 class Player:
     def __init__(self, x, y):
         self.image = player_img
@@ -94,6 +110,7 @@ class Alien:
 player = Player(WIDTH // 2, HEIGHT - 100)
 bullets = []
 aliens = []
+stars = [Star() for _ in range(100)]
 
 score = 0
 can_shoot = True
@@ -138,6 +155,7 @@ while running:
                     player = Player(WIDTH // 2, HEIGHT - 100)
                     bullets = []
                     aliens = []
+                    stars = [Star() for _ in range(100)]
                     score = 0
                     can_shoot = True
                     last_shot_time = 0
@@ -179,8 +197,14 @@ while running:
                 if player.lives <= 0:
                     game_over = True
 
+        for star in stars:
+            star.update()
+
     # ----- Drawing -----
     screen.fill(BLACK)
+
+    for star in stars:
+        star.draw(screen)
 
     player.draw(screen)
 
