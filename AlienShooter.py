@@ -1,5 +1,6 @@
 import pygame
 import sys
+import random
 
 pygame.init()
 
@@ -47,6 +48,23 @@ class Bullet:
     def is_off_screen(self):
         return self.rect.y < 0
 
+class Alien:
+    def __init__(self):
+        self.image = pygame.image.load("assets/alien.png")
+        self.image = pygame.transform.scale(self.image, (50, 50))
+        self.rect = self.image.get_rect()
+        self.rect.x = random.randint(0, WIDTH - self.rect.width)
+        self.rect.y = -self.rect.height
+
+    def update(self):
+        self.rect.y += 4
+
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)
+
+    def is_off_screen(self):
+        return self.rect.y > HEIGHT
+
 # Initialize player and bullets list
 player = Player(WIDTH // 2, HEIGHT - 100)
 bullets = []
@@ -55,6 +73,9 @@ bullets = []
 can_shoot = True
 shoot_cooldown = 300  # milliseconds
 last_shot_time = 0
+
+# Aliens list (empty for now)
+aliens = []
 
 running = True
 while running:
@@ -84,11 +105,14 @@ while running:
         if bullet.is_off_screen():
             bullets.remove(bullet)
 
-    # Draw everything
+    # DRAWING
     screen.fill(BLACK)
     player.draw(screen)
+
     for bullet in bullets:
         bullet.draw(screen)
+
+    # NOTE: aliens are not yet spawned or drawn in this step
 
     pygame.display.flip()
 
