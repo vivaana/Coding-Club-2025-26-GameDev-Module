@@ -131,6 +131,20 @@ while running:
             if event.type == pygame.USEREVENT:
                 aliens.append(Alien())
 
+        else:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_r:
+                    # Reset everything
+                    player = Player(WIDTH // 2, HEIGHT - 100)
+                    bullets = []
+                    aliens = []
+                    score = 0
+                    can_shoot = True
+                    last_shot_time = 0
+                    game_over = False
+                elif event.key in [pygame.K_q, pygame.K_ESCAPE]:
+                    running = False
+
     # ----- Game Updates -----
     if not game_over:
         player.move()
@@ -181,6 +195,13 @@ while running:
     score_text = font.render(f"Score: {score}", True, WHITE)
     screen.blit(lives_text, (10, 10))
     screen.blit(score_text, (WIDTH - 150, 10))
+
+    # Game over screen
+    if game_over:
+        game_over_text = large_font.render("GAME OVER", True, WHITE)
+        restart_text = font.render("Press R to Restart or Q to Quit", True, WHITE)
+        screen.blit(game_over_text, (WIDTH // 2 - game_over_text.get_width() // 2, HEIGHT // 2 - 50))
+        screen.blit(restart_text, (WIDTH // 2 - restart_text.get_width() // 2, HEIGHT // 2 + 10))
 
     pygame.display.flip()
 
