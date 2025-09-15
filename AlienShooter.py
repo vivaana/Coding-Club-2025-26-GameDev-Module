@@ -21,6 +21,9 @@ BLACK = (0, 0, 0)
 player_img = pygame.image.load("assets/player.png")
 player_img = pygame.transform.scale(player_img, (70, 70))
 
+alien_img = pygame.image.load("assets/alien.png")
+alien_img = pygame.transform.scale(alien_img, (50, 50))
+
 font = pygame.font.SysFont(None, 36)
 large_font = pygame.font.SysFont(None, 64)
 
@@ -40,8 +43,6 @@ class Player:
             self.move_left = True
         if key in [pygame.K_RIGHT, pygame.K_d]:
             self.move_right = True
-
-        # Shooting handled in game loop
 
     def handle_keyup(self, key):
         if key in [pygame.K_LEFT, pygame.K_a]:
@@ -72,14 +73,34 @@ class Bullet:
     def is_off_screen(self):
         return self.rect.y < 0
 
+class Alien:
+    def __init__(self):
+        self.image = alien_img
+        self.rect = self.image.get_rect()
+        self.rect.x = random.randint(0, WIDTH - self.rect.width)
+        self.rect.y = -self.rect.height
+
+    def update(self):
+        self.rect.y += 4
+
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)
+
+    def is_off_screen(self):
+        return self.rect.y > HEIGHT
+
 # ----- Game Variables -----
 
 player = Player(WIDTH // 2, HEIGHT - 100)
 bullets = []
+aliens = []
 
 can_shoot = True
 shoot_cooldown = 300  # milliseconds
 last_shot_time = 0
+
+# Set a timer to spawn aliens every 1000 ms
+pygame.time.set_timer(pygame.USEREVENT, 1000)
 
 running = True
 
@@ -105,6 +126,9 @@ while running:
         if event.type == pygame.KEYUP:
             player.handle_keyup(event.key)
 
+        if event.type == pygame.USEREVENT:
+            aliens.append(Alien())
+
     # ----- Game Updates -----
     player.move()
 
@@ -116,6 +140,11 @@ while running:
         if bullet.is_off_screen():
             bullets.remove(bullet)
 
+    for alien in aliens[:]:
+        alien.update()
+        if alien.is_off_screen():
+            aliens.remove(alien)
+
     # ----- Drawing -----
     screen.fill(BLACK)
 
@@ -123,6 +152,9 @@ while running:
 
     for bullet in bullets:
         bullet.draw(screen)
+
+    for alien in aliens:
+        alien.draw(screen)
 
     pygame.display.flip()
 
