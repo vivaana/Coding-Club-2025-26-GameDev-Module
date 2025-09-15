@@ -18,6 +18,10 @@ BLACK = (0, 0, 0)
 player_img = pygame.image.load("assets/player.png")
 player_img = pygame.transform.scale(player_img, (70, 70))
 
+# Optional: Load sounds (replace paths with your actual sound files)
+# shoot_sound = pygame.mixer.Sound("assets/shoot.wav")
+# alien_hit_sound = pygame.mixer.Sound("assets/explosion.wav")
+
 class Player:
     def __init__(self, x, y):
         self.image = player_img
@@ -30,7 +34,6 @@ class Player:
             self.rect.x -= self.speed
         if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
             self.rect.x += self.speed
-        # Keep player inside screen bounds
         self.rect.x = max(0, min(WIDTH - self.rect.width, self.rect.x))
 
     def draw(self, surface):
@@ -66,20 +69,19 @@ class Alien:
     def is_off_screen(self):
         return self.rect.y > HEIGHT
 
-# Initialize player and bullets list
 player = Player(WIDTH // 2, HEIGHT - 100)
 bullets = []
 
-# Shooting cooldown variables
 can_shoot = True
 shoot_cooldown = 300  # milliseconds
 last_shot_time = 0
 
-# Aliens list and spawn timer
 aliens = []
-pygame.time.set_timer(pygame.USEREVENT, 1000)  # spawn alien every 1000ms (1 second)
+pygame.time.set_timer(pygame.USEREVENT, 1000)
 
 font = pygame.font.SysFont(None, 36)
+
+score = 0
 
 running = True
 while running:
@@ -95,37 +97,37 @@ while running:
     keys = pygame.key.get_pressed()
     player.move(keys)
 
-    # Shoot bullets with cooldown
     if keys[pygame.K_SPACE] and can_shoot:
         bullet = Bullet(player.rect.centerx - 5, player.rect.top)
         bullets.append(bullet)
         can_shoot = False
         last_shot_time = current_time
+        # shoot_sound.play()  # Uncomment if you have sound file
 
     if not can_shoot and current_time - last_shot_time > shoot_cooldown:
         can_shoot = True
 
-    # Update bullets and remove if off screen
     for bullet in bullets[:]:
         bullet.update()
         if bullet.is_off_screen():
             bullets.remove(bullet)
 
-    # Update aliens and remove if off screen
     for alien in aliens[:]:
         alien.update()
         if alien.is_off_screen():
             aliens.remove(alien)
 
-    # COLLISION: Bullet hits Alien
+    # Collision bullet-alien
     for bullet in bullets[:]:
         for alien in aliens[:]:
             if bullet.rect.colliderect(alien.rect):
                 bullets.remove(bullet)
                 aliens.remove(alien)
-                break  # bullet can only hit one alien
+                score += 1
+                # alien_hit_sound.play()  # Uncomment if you have sound file
+                break
 
-    # COLLISION: Alien hits Player
+    # Collision alien-player
     for alien in aliens[:]:
         if alien.rect.colliderect(player.rect):
             aliens.remove(alien)
@@ -134,7 +136,7 @@ while running:
                 print("Game Over!")
                 running = False
 
-    # DRAWING
+    # Drawing
     screen.fill(BLACK)
     player.draw(screen)
 
@@ -144,9 +146,11 @@ while running:
     for alien in aliens:
         alien.draw(screen)
 
-    # Draw lives
+    # Draw lives and score
     lives_text = font.render(f"Lives: {player.lives}", True, WHITE)
+    score_text = font.render(f"Score: {score}", True, WHITE)
     screen.blit(lives_text, (10, 10))
+    screen.blit(score_text, (WIDTH - 150, 10))
 
     pygame.display.flip()
 
