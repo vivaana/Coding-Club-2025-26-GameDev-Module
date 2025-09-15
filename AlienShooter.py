@@ -41,6 +41,8 @@ class Player:
         if key in [pygame.K_RIGHT, pygame.K_d]:
             self.move_right = True
 
+        # Shooting handled in game loop
+
     def handle_keyup(self, key):
         if key in [pygame.K_LEFT, pygame.K_a]:
             self.move_left = False
@@ -57,9 +59,27 @@ class Player:
     def draw(self, surface):
         surface.blit(self.image, self.rect)
 
+class Bullet:
+    def __init__(self, x, y):
+        self.rect = pygame.Rect(x, y, 10, 20)
+
+    def update(self):
+        self.rect.y -= 8
+
+    def draw(self, surface):
+        pygame.draw.rect(surface, (255, 255, 0), self.rect)
+
+    def is_off_screen(self):
+        return self.rect.y < 0
+
 # ----- Game Variables -----
 
 player = Player(WIDTH // 2, HEIGHT - 100)
+bullets = []
+
+can_shoot = True
+shoot_cooldown = 300  # milliseconds
+last_shot_time = 0
 
 running = True
 
@@ -67,6 +87,7 @@ running = True
 
 while running:
     clock.tick(FPS)
+    current_time = pygame.time.get_ticks()
 
     # ----- Handle Events -----
     for event in pygame.event.get():
@@ -76,15 +97,32 @@ while running:
         if event.type == pygame.KEYDOWN:
             player.handle_keydown(event.key)
 
+            if event.key == pygame.K_SPACE and can_shoot:
+                bullets.append(Bullet(player.rect.centerx - 5, player.rect.top))
+                can_shoot = False
+                last_shot_time = current_time
+
         if event.type == pygame.KEYUP:
             player.handle_keyup(event.key)
 
     # ----- Game Updates -----
     player.move()
 
+    if not can_shoot and current_time - last_shot_time > shoot_cooldown:
+        can_shoot = True
+
+    for bullet in bullets[:]:
+        bullet.update()
+        if bullet.is_off_screen():
+            bullets.remove(bullet)
+
     # ----- Drawing -----
     screen.fill(BLACK)
+
     player.draw(screen)
+
+    for bullet in bullets:
+        bullet.draw(screen)
 
     pygame.display.flip()
 
